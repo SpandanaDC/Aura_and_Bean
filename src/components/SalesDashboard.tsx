@@ -21,7 +21,6 @@ import {
   TIER_LABELS,
   getTierStyle,
   formatCompactRevenue,
-  formatRevenue,
   formatRelativeTime,
   getInitials,
   getAvatarGradient,
@@ -29,9 +28,9 @@ import {
 
 interface SalesDashboardProps {
   inquiries: Inquiry[];
-  onSync: (id: number) => void;
+  onSync: (id: string | number) => void;
   onSyncAll: () => void;
-  syncingId: number | null;
+  syncingId: string | number | null;
   syncingCount: number;
 }
 
@@ -284,17 +283,10 @@ export default function SalesDashboard({
                     </td>
                     {/* Sync status */}
                     <td className="px-6 py-4">
-                      {inq.syncStatus === "Synced" ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-sage-500">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Synced
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-espresso-400/60">
-                          <span className="h-2 w-2 rounded-full bg-terracotta-300" />
-                          Pending
-                        </span>
-                      )}
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${inq.syncStatus === "Synced" ? "text-sage-500" : "text-terracotta-500"}`}>
+                        <span className={`h-2 w-2 rounded-full ${inq.syncStatus === "Synced" ? "bg-sage-400" : "bg-terracotta-400"}`} />
+                        {inq.syncStatus}
+                      </span>
                     </td>
                     {/* Action */}
                     <td className="px-6 py-4 text-right">
