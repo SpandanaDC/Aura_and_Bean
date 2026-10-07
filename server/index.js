@@ -9,7 +9,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Define Mongoose Schema & Model FIRST so it's fully available
+// 1. Define Mongoose Schema & Model FIRST
 const LeadSchema = new mongoose.Schema({
   contactName: String,
   organizationName: String,
@@ -22,7 +22,7 @@ const LeadSchema = new mongoose.Schema({
 });
 const Lead = mongoose.model('Lead', LeadSchema);
 
-// 2. Connect to MongoDB and seed data safely
+// 2. Connect to MongoDB and seed default data safely
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/aura-and-bean';
 mongoose.connect(MONGO_URI)
   .then(async () => {
@@ -37,7 +37,7 @@ mongoose.connect(MONGO_URI)
             locationType: 'Corporate Tech Park',
             dailyFootfall: 3500,
             expectedRevenue: 120000,
-            tier: '✨ Flagship Space',
+            tier: 'Flagship Space',
             syncStatus: 'Synced'
           },
           {
@@ -48,16 +48,25 @@ mongoose.connect(MONGO_URI)
             expectedRevenue: 35000,
             tier: 'Campus Partner',
             syncStatus: 'Pending'
+          },
+          {
+            contactName: 'Ananya Iyer',
+            organizationName: 'BioSense Institute',
+            locationType: 'College Campus',
+            dailyFootfall: 95,
+            expectedRevenue: 12000,
+            tier: 'Micro-Kiosk',
+            syncStatus: 'Pending'
           }
         ]);
-        console.log('Default seed leads inserted into MongoDB');
+        console.log('Default tier seed leads inserted into MongoDB');
       }
     } catch (seedErr) {
       console.error('Error seeding initial data:', seedErr);
     }
   })
   .catch(err => {
-    console.warn('MongoDB offline. Running in local fallback mode (make sure MongoDB service is active if persistence is required).');
+    console.warn('MongoDB offline. Running in local memory fallback mode.');
   });
 
 // API Routes
@@ -72,11 +81,18 @@ app.get('/api/leads', async (req, res) => {
 
 app.post('/api/leads', async (req, res) => {
   try {
-    const { contactName, organizationName, locationType, dailyFootfall, expectedRevenue, tier } = req.body;
+    const { contactName, organizationName, locationType, dailyFootfall, expectedRevenue } = req.body;
     
-    // Auto-sync automation rule for Flagship spaces
-    const isFlagship = dailyFootfall >= 1000 || tier === '✨ Flagship Space';
-    const initialSyncStatus = isFlagship ? 'Synced' : 'Pending';
+    // Strict 3-Tier Classification & Webhook Rule
+    let tier = 'Micro-Kiosk';
+    if (dailyFootfall >= 1000) {
+      tier = 'Flagship Space';
+    } else if (dailyFootfall >= 300) {
+      tier = 'Campus Partner';
+    }
+
+    // ONLY Flagship spaces auto-sync. Campus & Micro-Kiosk stay Pending for review.
+    const initialSyncStatus = dailyFootfall >= 1000 ? 'Synced' : 'Pending';
 
     const newLead = new Lead({
       contactName,
@@ -89,11 +105,6 @@ app.post('/api/leads', async (req, res) => {
     });
     
     await newLead.save();
-
-    if (isFlagship) {
-      console.log(`[Automated Webhook Dispatcher] Flagship space auto-synced: ${organizationName} (${dailyFootfall} footfall)`);
-    }
-
     res.status(201).json(newLead);
   } catch (err) {
     console.error('Error saving inquiry:', err);

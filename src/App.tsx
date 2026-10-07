@@ -29,19 +29,21 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // Fetch leads from Express/MongoDB backend on mount
+  // Fetch leads from Express/MongoDB backend on mount and merge securely
   useEffect(() => {
     fetch(`${API_URL}/leads`)
       .then(res => res.json())
       .then(data => {
-        if (data && data.length > 0) {
+        if (data && Array.isArray(data) && data.length > 0) {
           const formatted = data.map((item: any) => ({
             ...item,
             id: item._id,
             organization: item.organizationName,
             footfall: item.dailyFootfall,
             monthlyRevenue: item.expectedRevenue,
-            syncStatus: item.syncStatus, // Explicitly map backend sync status
+            tier: item.tier || classifyTier(item.dailyFootfall),
+            syncStatus: item.syncStatus || 'Pending',
+            createdAt: item.createdAt || new Date().toISOString(),
           }));
           setInquiries(formatted);
         }
@@ -103,19 +105,19 @@ export default function App() {
       const newInquiry: Inquiry = {
         ...data,
         id: savedLead._id,
-        tier: savedLead.tier,
-        syncStatus: savedLead.syncStatus, // Sync status comes straight from backend automation rule
-        createdAt: savedLead.createdAt,
+        tier: savedLead.tier || tier,
+        syncStatus: savedLead.syncStatus || 'Pending',
+        createdAt: savedLead.createdAt || new Date().toISOString(),
       };
 
       setInquiries((prev) => [newInquiry, ...prev]);
-      setSuccessData({ org: data.organization, tier });
+      setSuccessData({ org: data.organization, tier: newInquiry.tier });
       setSuccessOpen(true);
       
-      if (savedLead.syncStatus === 'Synced') {
+      if (newInquiry.syncStatus === 'Synced') {
         addToast(`Flagship Auto-Synced: Inquiry received from ${data.organization}`);
       } else {
-        addToast(`Inquiry received from ${data.organization}`);
+        addToast(`Inquiry received from ${data.organization} (Pending Review)`);
       }
     } catch (err) {
       console.error("Submission failed:", err);

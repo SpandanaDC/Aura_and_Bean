@@ -212,10 +212,10 @@ export default function SalesDashboard({
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table (Sync Column Removed) */}
       <div className="overflow-hidden rounded-3xl border border-cream-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] text-left">
+          <table className="w-full min-w-[780px] text-left">
             <thead className="border-b border-cream-200 bg-cream-50/50 text-xs uppercase tracking-wide text-espresso-400/70">
               <tr>
                 {([
@@ -224,7 +224,6 @@ export default function SalesDashboard({
                   { key: "locationType" as SortKey, label: "Location" },
                   { key: "footfall" as SortKey, label: "Footfall" },
                   { key: "tier" as SortKey, label: "Tier" },
-                  { key: "syncStatus" as SortKey, label: "Sync" },
                 ]).map((col) => (
                   <th key={col.key} className="px-6 py-4">
                     <button
@@ -281,13 +280,6 @@ export default function SalesDashboard({
                         {inq.tier}
                       </span>
                     </td>
-                    {/* Sync status */}
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 text-xs font-semibold ${inq.syncStatus === "Synced" ? "text-sage-500" : "text-terracotta-500"}`}>
-                        <span className={`h-2 w-2 rounded-full ${inq.syncStatus === "Synced" ? "bg-sage-400" : "bg-terracotta-400"}`} />
-                        {inq.syncStatus}
-                      </span>
-                    </td>
                     {/* Action */}
                     <td className="px-6 py-4 text-right">
                       {inq.syncStatus === "Pending" ? (
@@ -310,7 +302,7 @@ export default function SalesDashboard({
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center">
+                  <td colSpan={6} className="px-6 py-16 text-center">
                     <p className="text-sm text-espresso-400/60">
                       {hasFilters ? "No inquiries match your filters." : "No inquiries yet."}
                     </p>
